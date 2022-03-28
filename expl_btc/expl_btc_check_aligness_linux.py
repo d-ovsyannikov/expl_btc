@@ -8,9 +8,10 @@ import sys
 rpcUrl = 'http://username:password@127.0.0.1:8332/'
 # rpcUrl = 'http://user1203:Dr3Ld0z[sqfR4@localhost:8332/'
 
+#-----------------------------------------------------------------------------------------------
 def getMinMaxBlockInDB():
 	return (10, 20)
-
+#-----------------------------------------------------------------------------------------------
 def getBlockchainHeight():
 	query = '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockchaininfo" }'
 	r = requests.post(rpcUrl,  data=query)
@@ -18,7 +19,7 @@ def getBlockchainHeight():
 		print ("BTC-Core RPC getblockhash call error:", r)
 		exit()
 	return r.json()["result"]["blocks"]
-
+#-----------------------------------------------------------------------------------------------
 def printProgressBar(iteration, total, decimals=1, length=50):
 	str_format = "{0:." + str(decimals) + "f}"
 	percents = str_format.format(100 * (iteration / float(total)))
@@ -31,7 +32,9 @@ def printProgressBar(iteration, total, decimals=1, length=50):
 	if iteration == total:
 		sys.stdout.write('\n')
 	sys.stdout.flush()
+#-----------------------------------------------------------------------------------------------
 
+print ("###### BTC-blockchain synchronization utility ######\n")
 
 # Connect to DB
 db = mysql.connect(
@@ -43,28 +46,42 @@ db = mysql.connect(
 	# database = "datacamp"
 )
 cursor = db.cursor()
+print ("DB connection [OK]")
 
 # Check if tables exists, if not - create
 query = "SHOW TABLES LIKE 'outs';"
 cursor.execute(query)
 r = cursor.fetchall()
-if len(r) != 0:
-	cursor.execute("SELECT COUNT(*) FROM outs;")
-	r = cursor.fetchall()
-	print ("TX outs table exists, rows: ",r[0][0])
+query = "SHOW TABLES LIKE 'ins';"
+cursor.execute(query)
+r2 = cursor.fetchall()
 
-	cursor.execute("SELECT MAX(block) FROM outs;")
-	r = cursor.fetchall()
-	maxBlockInDB = r[0][0]
-	cursor.execute("SELECT MIN(block) FROM outs;")
-	r = cursor.fetchall()
-	minBlockInDB = r[0][0]
+if len(r) == 0:	
+	print ("DB: 'outs' table not found, all data dropped, tables recreated")
+	if len(r2) != 0:
+		cursor.execute("DROP TABLE ins;")
 
-	print ("Blocks in DB:", minBlockInDB, "-", maxBlockInDB)
-	print ("The height of blockcahin is", getBlockchainHeight())
-	cursor.execute("DROP TABLE outs;")
-cursor.execute("CREATE TABLE outs (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), addr VARCHAR(255), out_ind INT, value FLOAT, block INT)")
+if len(r2) == 0:
+	if len(r) != 0:
+		print ("DB: 'ins' table not found, all data dropped, tables recreated")
+		cursor.execute("DROP TABLE outs;")
+	
+if len(r2) == 0 or len(r) == 0:
+	cursor.execute("CREATE TABLE outs (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), addr VARCHAR(255), out_ind INT, value FLOAT, block INT)")
+	cursor.execute("CREATE TABLE ins (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), out_ind INT, block INT)")
 
+cursor.execute("SELECT MAX(block) FROM outs;")
+r = cursor.fetchall()
+maxBlockInDB = r[0][0]
+cursor.execute("SELECT MIN(block) FROM outs;")
+r = cursor.fetchall()
+minBlockInDB = r[0][0]
+
+print ("Blockchain height: %d, loaded to DB %d (from %d to %d), %f%" %(getBlockchainHeight(), maxBlockInDB - minBlockInDB + 1, minBlockInDB, maxBlockInDB, (maxBlockInDB - minBlockInDB + 1)/getBlockchainHeight()))
+print ("Trim boundary blocks [OK]")
+
+# print ("Loading newest blocks:")
+# print ("Loading historical blocks")
 
 query = "SHOW TABLES LIKE 'ins';"
 cursor.execute(query)
@@ -74,7 +91,8 @@ if len(r) != 0:
 	r = cursor.fetchall()
 	print ("TX inst table exists, rows: ",r[0][0])
 	cursor.execute("DROP TABLE ins;")
-cursor.execute("CREATE TABLE ins (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), out_ind INT, block INT)")
+
+print ("Bitcoin-core RPC connection [OK]")
 
 startBlock = 729050
 finalBlock = 728850
@@ -127,11 +145,3 @@ print()
 
 overall_end = time.time()
 print (np.around((overall_end - overall_start) , decimals=2), "sec. in total")
-
-cursor.execute("SELECT COUNT(*) FROM outs;")
-r = cursor.fetchall()
-print ("TX outs table exists, rows: ",r[0][0])
-
-cursor.execute("SELECT COUNT(*) FROM ins;")
-r = cursor.fetchall()
-print ("TX ins table exists, rows: ",r[0][0])
