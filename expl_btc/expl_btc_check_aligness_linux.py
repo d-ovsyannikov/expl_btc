@@ -18,7 +18,7 @@ def getBlockchainHeight():
 	if not r.ok:
 		print ("BTC-Core RPC getblockhash call error:", r)
 		exit()
-	return r.json()["result"]["blocks"]
+	return int(r.json()["result"]["blocks"])
 #-----------------------------------------------------------------------------------------------
 def printProgressBar(iteration, total, decimals=1, length=50):
 	str_format = "{0:." + str(decimals) + "f}"
@@ -34,7 +34,7 @@ def printProgressBar(iteration, total, decimals=1, length=50):
 	sys.stdout.flush()
 #-----------------------------------------------------------------------------------------------
 
-print ("###### BTC-blockchain synchronization utility ######\n")
+print ("###### BTC-blockchain synchronization utility ######")
 
 # Connect to DB
 db = mysql.connect(
@@ -69,33 +69,31 @@ if len(r2) == 0:
 if len(r2) == 0 or len(r) == 0:
 	cursor.execute("CREATE TABLE outs (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), addr VARCHAR(255), out_ind INT, value FLOAT, block INT)")
 	cursor.execute("CREATE TABLE ins (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), out_ind INT, block INT)")
+	# cursor.execute("ALTER TABLE `outs` ADD INDEX `addr_index` (`addr`);")
+	# cursor.execute("ALTER TABLE `ins` ADD INDEX `txid_index` (`txid`);")
+
+print ("Bitcoin-core RPC connection [OK]")
 
 cursor.execute("SELECT MAX(block) FROM outs;")
 r = cursor.fetchall()
-maxBlockInDB = r[0][0]
 cursor.execute("SELECT MIN(block) FROM outs;")
-r = cursor.fetchall()
-minBlockInDB = r[0][0]
+r2 = cursor.fetchall()
 
-print ("Blockchain height: %d, loaded to DB %d (from %d to %d), %f%" %(getBlockchainHeight(), maxBlockInDB - minBlockInDB + 1, minBlockInDB, maxBlockInDB, (maxBlockInDB - minBlockInDB + 1)/getBlockchainHeight()))
-print ("Trim boundary blocks [OK]")
+# print(r[0][0], r2)
+
+if r2[0][0] == None or r[0][0] == None:
+	print ("Blockchain height: %d, loaded to DB 0, 0%%" %(getBlockchainHeight()))
+else:
+	minBlockInDB = int(r2[0][0])
+	maxBlockInDB = int(r[0][0])
+	print ("Blockchain height: %d, loaded to DB %d (from %d to %d), %f%%" %(getBlockchainHeight(), maxBlockInDB - minBlockInDB + 1, minBlockInDB, maxBlockInDB, (maxBlockInDB - minBlockInDB + 1)/getBlockchainHeight()))
+	print ("Trim boundary blocks [OK]")
 
 # print ("Loading newest blocks:")
 # print ("Loading historical blocks")
 
-query = "SHOW TABLES LIKE 'ins';"
-cursor.execute(query)
-r = cursor.fetchall()
-if len(r) != 0:
-	cursor.execute("SELECT COUNT(*) FROM ins;")
-	r = cursor.fetchall()
-	print ("TX inst table exists, rows: ",r[0][0])
-	cursor.execute("DROP TABLE ins;")
-
-print ("Bitcoin-core RPC connection [OK]")
-
-startBlock = 729050
-finalBlock = 728850
+startBlock = 728850
+finalBlock = 727850
 
 overall_start = time.time()
 for blockNum in range(startBlock, finalBlock, -1):	
@@ -129,6 +127,10 @@ for blockNum in range(startBlock, finalBlock, -1):
 			if "addresses" in out["scriptPubKey"]:
 				query = "INSERT INTO outs (txid, addr, out_ind, value, block) VALUES ('%s', %s, %d, %f, %d)" %(tx["txid"], json.dumps(out["scriptPubKey"]["addresses"][0]), ind, out["value"], blockNum)
 				cursor.execute(query)
+			if "address" in out["scriptPubKey"]:
+				query = "INSERT INTO outs (txid, addr, out_ind, value, block) VALUES ('%s', %s, %d, %f, %d)" %(tx["txid"], json.dumps(out["scriptPubKey"]["address"]), ind, out["value"], blockNum)
+				cursor.execute(query)
+
 			ind = ind + 1
 
 		for ins in tx["vin"]:
