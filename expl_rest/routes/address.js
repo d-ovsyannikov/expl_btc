@@ -3,7 +3,8 @@ const Router = express.Router();
 const db = require('../connection')
 
 Router.get("/", (req, res)=>{
-	db.query("select * from outs limit 3", (err, rows, fields)=>{
+	console.log(req.query.addr)
+	db.query("select * from outs where addr='"+req.query.addr+"';", (err, rows, fields)=>{
 		if (!err)
 		{
 			res.send(rows);

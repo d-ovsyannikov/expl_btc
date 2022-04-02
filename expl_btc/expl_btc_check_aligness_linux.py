@@ -92,8 +92,10 @@ else:
 # print ("Loading newest blocks:")
 # print ("Loading historical blocks")
 
-startBlock = 728850
-finalBlock = 727850
+startBlock = 729580
+finalBlock = 600000
+# startBlock = 727579
+# finalBlock = 729280
 
 overall_start = time.time()
 for blockNum in range(startBlock, finalBlock, -1):	
