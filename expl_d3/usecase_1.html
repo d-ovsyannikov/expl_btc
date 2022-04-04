@@ -28,26 +28,30 @@ circle {
 
 .node.utxo {
   fill: #ccc;
-  stroke: rgb(68, 0, 255);
+  stroke: black;
   stroke-width: 1.5px;
+  r: 5;
 }
 
 .node.notfound {
-  fill: #ccc;
-  stroke: red;
+  fill: red;
+  stroke: black;
   stroke-width: 1.5px;
+  r: 5;
 }
 
 .node.found {
   fill: green;
-  stroke: #333;
+  stroke: black;
   stroke-width: 1.5px;
+  r: 5;
 }
 
 .node.tx {
   fill: yellow;
-  stroke: #333;
-  stroke-width: 2.5px;
+  stroke: black;
+  stroke-width: 1.5px;
+  r: 5;
 }
 
 text {
@@ -88,7 +92,13 @@ var force = d3.layout.force()
 var svg = d3.select("body").append("svg")
     // .attr("viewBox", [-width / 2, -height / 2, width, height]);
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    // .attr("width", "100%")
+    // .attr("height", "100%")
+    .call(d3.behavior.zoom().on("zoom", function () {
+      svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+    }))
+    .append("g")
 
 // Per-type markers, as they don't inherit styles.
 svg.append("defs").selectAll("marker")
@@ -114,9 +124,24 @@ var circle = svg.append("g").selectAll("circle")
     .data(force.nodes())
   .enter().append("circle")
     .attr("class", function(d) { return "node. " + d.type; })
-    .attr("r", 6)
+    // .attr("r", 6)
     .call(force.drag)
     .on("click", handleMouseClick);
+
+// var nodeSymb = svg.append("g").selectAll(".node")
+//     .data(force.nodes())
+//     .enter()
+//     .append("path")
+//     .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+//     .attr("d", d3.svg.symbol()
+//     .type(d3.symbolSquare)
+//     .size(5))
+//     .attr("class", function(d) { return "node " + d.type; })
+//     // // .style("fill", "steelblue")
+//     // .style("stroke", "white")
+//     // .style("stroke-width", "1.5px")
+//     .call(force.drag)
+//     .on("click", handleMouseClick);
 
 var text = svg.append("g").selectAll("text")
     .data(force.nodes())
@@ -129,7 +154,8 @@ var text = svg.append("g").selectAll("text")
 // Use elliptical arc path segments to doubly-encode directionality.
 function tick() {
   path.attr("d", linkArc);
-  svg.selectAll("circle").attr("transform", transform);
+  // svg.selectAll("circle").attr("transform", transform);
+  svg.selectAll(".node").attr("transform", transform);
   text.attr("transform", transform);
 }
 
@@ -169,6 +195,21 @@ function restart() {
     .attr("r", 6)
     .call(force.drag)
     .on("click", handleMouseClick);  
+
+  // // nodeSymb = nodeSymb.data(force.nodes())
+  // nodeSymb.data(force.nodes())
+  //   .enter()
+  //   .append("path")
+  //   // .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+  //   .attr("d", d3.svg.symbol()
+  //     .type(d3.svg.symbolTypes[5])
+  //     .size(55.0))
+  //   .attr("class", function(d) { return "node " + d.type; })
+  //   .style("fill", "steelblue")
+  //   .style("stroke", "white")
+  //   .style("stroke-width", "0.0px")
+  //   .call(force.drag)
+  //   .on("click", handleMouseClick);
 
   path = path.data(force.links());
   path.enter().append("path")
