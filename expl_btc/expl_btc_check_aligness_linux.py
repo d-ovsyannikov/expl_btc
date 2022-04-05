@@ -68,9 +68,9 @@ if len(r2) == 0:
 	
 if len(r2) == 0 or len(r) == 0:
 	cursor.execute("CREATE TABLE outs (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), addr VARCHAR(255), out_ind INT, value FLOAT, block INT)")
-	cursor.execute("CREATE TABLE ins (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), out_ind INT, block INT)")
+	cursor.execute("CREATE TABLE ins (id BIGINT NOT NULL PRIMARY KEY auto_increment, tx_src VARCHAR(255),tx_dst VARCHAR(255), out_ind INT, block INT)")
 	# cursor.execute("ALTER TABLE `outs` ADD INDEX `addr_index` (`addr`);")
-	# cursor.execute("ALTER TABLE `ins` ADD INDEX `txid_index` (`txid`);")
+	# cursor.execute("ALTER TABLE `ins` ADD INDEX `tx_src_index` (`tx_src`);")
 
 print ("Bitcoin-core RPC connection [OK]")
 
@@ -86,7 +86,7 @@ if r2[0][0] == None or r[0][0] == None:
 else:
 	minBlockInDB = int(r2[0][0])
 	maxBlockInDB = int(r[0][0])
-	print ("Blockchain height: %d, loaded to DB %d (from %d to %d), %f%%" %(getBlockchainHeight(), maxBlockInDB - minBlockInDB + 1, minBlockInDB, maxBlockInDB, (maxBlockInDB - minBlockInDB + 1)/getBlockchainHeight()))
+	print ("Blockchain height: %d, loaded to DB %d (from %d to %d), %f%%" %(getBlockchainHeight(), maxBlockInDB - minBlockInDB + 1, minBlockInDB, maxBlockInDB, (maxBlockInDB - minBlockInDB + 1)*100.0/getBlockchainHeight()))
 	print ("Trim boundary blocks [OK]")
 
 # print ("Loading newest blocks:")
@@ -96,6 +96,8 @@ startBlock = 729580
 finalBlock = 600000
 # startBlock = 727579
 # finalBlock = 729280
+
+exit()
 
 overall_start = time.time()
 for blockNum in range(startBlock, finalBlock, -1):	
@@ -137,7 +139,7 @@ for blockNum in range(startBlock, finalBlock, -1):
 
 		for ins in tx["vin"]:
 			if "txid" in ins:
-				query = "INSERT INTO ins (txid, out_ind, block) VALUES (%s, %d, %d)" %(json.dumps(ins["txid"]), ins["vout"], blockNum)
+				query = "INSERT INTO ins (tx_src, tx_dst, out_ind, block) VALUES ('%s', '%s', %d, %d)" %(ins["txid"], tx["txid"], ins["vout"], blockNum)
 				cursor.execute(query)
 	db.commit()
 	printProgressBar(-blockNum+startBlock, -finalBlock+startBlock)
