@@ -253,14 +253,8 @@ function txAdd(txToAdd){
       if (data2.result == "not found"){
         newNode["tx_dst"] = "";
         newNode["type"] = "notfound";
-      } else if (data2.result == "utxo"){
-        newNode["tx_dst"] = "";
-        newNode["type"] = "utxo";
-      } else {
-        newNode["tx_dst"] = data2.data[0].tx_dst;
-        newNode["type"] = "found";
         // Check if this TXO is already added to chart
-        i2 = outExistsDst(newNode["tx_dst"], el.n)
+        i2 = outExistsSrc(newNode["tx_src"], el.n)
         if (i2 != -1)
         {
           newNode = null;
@@ -268,7 +262,22 @@ function txAdd(txToAdd){
           // console.log(i2)
           links.push({source: txInd-1, target: i2, type: "suit"});
         } 
-        // console.log(i2)
+      } else if (data2.result == "utxo"){
+        newNode["tx_dst"] = "";
+        newNode["type"] = "utxo";
+      } else {
+        newNode["tx_dst"] = data2.data[0].tx_dst;
+        newNode["type"] = "found";
+        // Check if this TXO is already added to chart
+        i2 = outExistsSrc(newNode["tx_src"], el.n)
+        if (i2 != -1)
+        {
+          newNode = null;
+          // link existing node to tx being added
+          // console.log(i2)
+          links.push({source: txInd-1, target: i2, type: "suit"});
+        } 
+        console.log(i2)
       }
     
       // console.log(newNode)
@@ -310,7 +319,6 @@ function outExistsDst(txid, n){
       return list[i].index;
     }
   }
-  // console.log("not ok")
   return -1;
 }
 
