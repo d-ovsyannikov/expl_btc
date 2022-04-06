@@ -217,7 +217,8 @@ function restart() {
     .attr("marker-end", function(d) { return "url(#" + d.type + ")"; });
 
   text = text.data(force.nodes());
-  text.enter().append("text")
+  text.enter()
+    .append("text")
     .attr("x", 8)
     .attr("y", ".31em")
     .text(function(d) { if (d.name.length > 10){return d.name.substr(0, 5) + "..." + d.name.substr(d.name.length - 5, d.name.length);} else return d.name });
@@ -258,6 +259,7 @@ function txAdd(txToAdd){
         if (i2 != -1)
         {
           newNode = null;
+          (force.nodes())[i2]["name"] = String(el.value);
           // link existing node to tx being added
           // console.log(i2)
           links.push({source: txInd-1, target: i2, type: "suit"});
@@ -273,6 +275,7 @@ function txAdd(txToAdd){
         if (i2 != -1)
         {
           newNode = null;
+          (force.nodes())[i2]["name"] = String(el.value);
           // link existing node to tx being added
           // console.log(i2)
           links.push({source: txInd-1, target: i2, type: "suit"});
