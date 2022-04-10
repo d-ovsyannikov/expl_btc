@@ -51,7 +51,7 @@ def printProgressBar(iteration, total, estTime, decimals=1, length=50):
 	hours = (estTime - days*1440) // 60
 	mins = estTime - days*1440 - hours*60
 	if days != 0:
-			ETC = "%d days, %d hours, %d min" %(days,hours, mins)
+			ETC = "%d days, %d hours, %d min      " %(days,hours, mins)
 
 	else:
 		if hours != 0:
@@ -142,10 +142,9 @@ if len(r2) == 0 or len(r) == 0:
 	cursor.execute("CREATE TABLE outs (id BIGINT NOT NULL PRIMARY KEY auto_increment, txid VARCHAR(255), addr VARCHAR(255), out_ind INT, value FLOAT, block INT)")
 	cursor.execute("CREATE TABLE ins (id BIGINT NOT NULL PRIMARY KEY auto_increment, tx_src VARCHAR(255),tx_dst VARCHAR(255), out_ind INT, block INT)")
 	# cursor.execute("ALTER TABLE `outs` ADD INDEX `addr_index` (`addr`);")
-	# ALTER TABLE `outs` ADD INDEX `block_index` (`block`), ADD INDEX `addr_index` (`addr`);
 	# cursor.execute("ALTER TABLE `ins` ADD INDEX `tx_src_index` (`tx_src`);")
-	# ALTER TABLE `ins` ADD INDEX `block_index` (`block`), ADD INDEX `tx_src_index` (`tx_src`), ADD INDEX out_ind_index (out_ind);
-
+	# ALTER TABLE `outs` ADD INDEX `block_index` (`block`), ADD INDEX `addr_index` (`addr`); ALTER TABLE `ins` ADD INDEX `block_index` (`block`), ADD INDEX `tx_src_index` (`tx_src`), ADD INDEX `tx_dst_index` (`tx_dst`), ADD INDEX out_ind_index (out_ind);
+	# drop index addr_index on outs; drop index block_index on outs; drop index tx_src_index on ins; drop index tx_dst_index on ins; drop index out_ind_index on ins; drop index block_index on ins;
 print ("Bitcoin-core RPC connection [OK]")
 
 minMaxBlockInDB = getMinMaxBlockInDB()
@@ -179,6 +178,11 @@ timeQueue = []
 maxTimeQueueLen = 150
 avgTime = 0
 
+#!!!!!
+# minMaxBlockInDB[0] = 1
+# minMaxBlockInDB[1] = 0
+#!!!!!
+
 # print (np.around((end - start) , decimals=2), "sec. for block")
 if minMaxBlockInDB[0]:
 	if minMaxBlockInDB[1] < highestBlock:
@@ -199,7 +203,7 @@ if minMaxBlockInDB[0]:
 			for i3 in timeQueue:
 				avgTime = avgTime + i3
 			avgTime = avgTime/len(timeQueue)
-			start = end
+			# start = end
 
 			printProgressBar(blockNum-minMaxBlockInDB[1], highestBlock-minMaxBlockInDB[1] + 1, (highestBlock - blockNum)* avgTime)
 			commitCounter = commitCounter + 1
@@ -238,7 +242,7 @@ if (minMaxBlockInDB[0] != 0):
 		for i3 in timeQueue:
 			avgTime = avgTime + i3
 		avgTime = avgTime/len(timeQueue)
-		start = end
+		# start = end
 
 
 		printProgressBar(-blockNum+startBlock, -finalBlock+startBlock, blockNum* avgTime)
