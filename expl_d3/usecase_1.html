@@ -297,7 +297,7 @@ function txAdd(txToAdd){
       if (i2 != -1){
         links.push({target: txInd-1, source: i2, type: "suit"});
       } else {
-        newNode = {name: "", type: "found", tx_dst: data.txid, n: el.vout, tx_src: el.txid}
+        newNode = {name: String(el.value), type: "found", tx_dst: data.txid, n: el.vout, tx_src: el.txid}
         nInd = force.nodes().push(newNode); 
         links.push({source: nInd - 1, target: txInd - 1, type: "suit"});
         // console.log(el.txid)
