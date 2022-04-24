@@ -156,18 +156,18 @@ if minMaxBlockInDB[0] == None or minMaxBlockInDB[1] == None:
 	print ("Blockchain height: %d, loaded to DB 0, 0%%" %(highestBlock))
 else:
 	print ("Blockchain height: %d, loaded to DB %d (from %d to %d), %f%%" %(highestBlock, minMaxBlockInDB[1] - minMaxBlockInDB[0] + 1, minMaxBlockInDB[0], minMaxBlockInDB[1], (minMaxBlockInDB[1] - minMaxBlockInDB[0] + 1)*100.0/highestBlock))
-	cursor.execute("DELETE FROM outs WHERE block=%d;" %minMaxBlockInDB[0])
-	cursor.execute("DELETE FROM outs WHERE block=%d;" %minMaxBlockInDB[1])
-	cursor.execute("DELETE FROM ins WHERE block=%d;" %minMaxBlockInDB[0])
-	cursor.execute("DELETE FROM ins WHERE block=%d;" %minMaxBlockInDB[1])
-	print ("Trim boundary blocks [OK]")
-	if minMaxBlockInDB[0] == minMaxBlockInDB[1]:
-		minMaxBlockInDB = (None, None)
-	else:
-		minMaxBlockInDB[1] = minMaxBlockInDB[1] - 1
+	if (minMaxBlockInDB[0] != 0):
+		cursor.execute("DELETE FROM outs WHERE block=%d;" %minMaxBlockInDB[0])
+		cursor.execute("DELETE FROM ins WHERE block=%d;" %minMaxBlockInDB[0])
 		minMaxBlockInDB[0] = minMaxBlockInDB[0] + 1
-	
 
+	cursor.execute("DELETE FROM outs WHERE block=%d;" %minMaxBlockInDB[1])
+	cursor.execute("DELETE FROM ins WHERE block=%d;" %minMaxBlockInDB[1])
+	minMaxBlockInDB[1] = minMaxBlockInDB[1] - 1
+	print ("Trim boundary blocks [OK]")
+	if minMaxBlockInDB[0] > minMaxBlockInDB[1]:
+		minMaxBlockInDB = (None, None)
+		
 commitCounter = 0
 commitEveryNBlocks = 10
 # start = time.time()
