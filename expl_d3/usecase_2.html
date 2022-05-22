@@ -27,10 +27,12 @@ text {
   <p>
     <label >Addr:</label>
     <input id="addrEdit" type="text" size="80"
-      value="1UeHTYekppWtmtFuBk7anQfi35gDq3SBm">
+      value="1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX">
     <input id="addButton" type="button" size="10" value=" Add "> 
   </p>
   <!-- 3FUQDka2kormn3Ba9UnBeZyjktqL8kgkw5 -->
+  <!-- 1UeHTYekppWtmtFuBk7anQfi35gDq3SBm -->
+  
 </body>
 
 <script src="http:\\d3js.org/d3.v3.min.js"></script>
@@ -157,7 +159,7 @@ function addrAdd(addrToAdd){
     for (var el of data){
       // console.log(el.tx_dst)
       txAdd(el.tx_dst)
-      if (i++ >= 50) break;
+      if (i++ >= 1000) break;
       // i++;
     } 
   }
@@ -178,10 +180,11 @@ function txAdd(txToAdd){
     for (var el of data.vout){ 
       if (i++ > 165) break;
       // i++;
-      // console.log(el) // .scriptPubKey.address
+      console.log(el) // .scriptPubKey.address
       if (addrNodeExist(String(el.scriptPubKey.address)) == -1){
         newNode = {name: String(el.scriptPubKey.address), type: "", tx_src: data.txid, n: el.n, weight: 1.0, x: 0.0, y: 0.0}
         force.nodes().push(newNode);
+        force.start();
       }
     }
     force.start();
@@ -189,13 +192,14 @@ function txAdd(txToAdd){
 
     i = 0, j = 0;
     for (var el of data.vin){
-      // console.log(el)
+      console.log(el)
       if (i++ > 165) break;
       // i++;
       nInd = addrNodeExist(String(el.addr));
       if (nInd == -1){
         newNode = {name: String(el.addr), type: "", weight: 1.0, x: 0.0, y: 0.0}
         nInd = force.nodes().push(newNode);
+        force.start();
         nInd = nInd - 1;
       }
       j = 0;
