@@ -8,50 +8,10 @@
   stroke-width: 1.5px;
 }
 
-#licensing {
-  fill: green;
-}
-
-.link.licensing {
-  stroke: green;
-}
-
-.link.resolved {
-  stroke-dasharray: 0,2 1;
-}
-
 circle {
   fill: #ccc;
   stroke: #333;
   stroke-width: 1.5px;
-}
-
-.node.utxo {
-  fill: #ccc;
-  stroke: black;
-  stroke-width: 1.5px;
-  r: 5;
-}
-
-.node.notfound {
-  fill: red;
-  stroke: black;
-  stroke-width: 1.5px;
-  r: 5;
-}
-
-.node.found {
-  fill: green;
-  stroke: black;
-  stroke-width: 1.5px;
-  r: 5;
-}
-
-.node.tx {
-  fill: yellow;
-  stroke: black;
-  stroke-width: 1.5px;
-  r: 5;
 }
 
 text {
@@ -60,15 +20,17 @@ text {
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
 
+/* value="1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX"> */
+
 </style>
 <body>
   <p>
-    <label >TX id:</label>
-    <input id="txEdit" type="text" size="80"
-      value="735edf637d7665ff5458d5fa5300d894324dc1579cf6ffaac4cb09655d4e0504">
+    <label >Addr:</label>
+    <input id="addrEdit" type="text" size="80"
+      value="1UeHTYekppWtmtFuBk7anQfi35gDq3SBm">
     <input id="addButton" type="button" size="10" value=" Add "> 
   </p>
-
+  <!-- 3FUQDka2kormn3Ba9UnBeZyjktqL8kgkw5 -->
 </body>
 
 <script src="http:\\d3js.org/d3.v3.min.js"></script>
@@ -90,11 +52,8 @@ var force = d3.layout.force()
     .start();
 
 var svg = d3.select("body").append("svg")
-    // .attr("viewBox", [-width / 2, -height / 2, width, height]);
     .attr("width", width)
     .attr("height", height)
-    // .attr("width", "100%")
-    // .attr("height", "100%")
     .call(d3.behavior.zoom().on("zoom", function () {
       svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
     }))
@@ -124,24 +83,8 @@ var circle = svg.append("g").selectAll("circle")
     .data(force.nodes())
   .enter().append("circle")
     .attr("class", function(d) { return "node. " + d.type; })
-    // .attr("r", 6)
     .call(force.drag)
     .on("click", handleMouseClick);
-
-// var nodeSymb = svg.append("g").selectAll(".node")
-//     .data(force.nodes())
-//     .enter()
-//     .append("path")
-//     .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-//     .attr("d", d3.svg.symbol()
-//     .type(d3.symbolSquare)
-//     .size(5))
-//     .attr("class", function(d) { return "node " + d.type; })
-//     // // .style("fill", "steelblue")
-//     // .style("stroke", "white")
-//     // .style("stroke-width", "1.5px")
-//     .call(force.drag)
-//     .on("click", handleMouseClick);
 
 var text = svg.append("g").selectAll("text")
     .data(force.nodes())
@@ -154,7 +97,6 @@ var text = svg.append("g").selectAll("text")
 // Use elliptical arc path segments to doubly-encode directionality.
 function tick() {
   path.attr("d", linkArc);
-  // svg.selectAll("circle").attr("transform", transform);
   svg.selectAll(".node").attr("transform", transform);
   text.attr("transform", transform);
 }
@@ -171,45 +113,23 @@ function transform(d) {
 }
 
 document.getElementById("addButton").onclick = function() {
-  txAdd(document.getElementById("txEdit").value);
-  console.log(force.nodes())
+  addrAdd(document.getElementById("addrEdit").value);
+  // console.log(force.nodes())
 }
 
 function handleMouseClick(d, i) {  
     list = force.nodes() 
-    if (list[i].tx_dst != ""){
-      txAdd(list[i].tx_dst)
-    }
-    if (list[i].tx_src != ""){
-      txAdd(list[i].tx_src)
-    }
-    
+    addrAdd(list[i].name)  
     restart();
 }
 function restart() {
 
   circle = circle.data(force.nodes());
   circle.enter().append("circle")
-    // .attr("class", ".node")
     .attr("class", function(d) { return "node " + d.type; })
     .attr("r", 6)
     .call(force.drag)
     .on("click", handleMouseClick);  
-
-  // // nodeSymb = nodeSymb.data(force.nodes())
-  // nodeSymb.data(force.nodes())
-  //   .enter()
-  //   .append("path")
-  //   // .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-  //   .attr("d", d3.svg.symbol()
-  //     .type(d3.svg.symbolTypes[5])
-  //     .size(55.0))
-  //   .attr("class", function(d) { return "node " + d.type; })
-  //   .style("fill", "steelblue")
-  //   .style("stroke", "white")
-  //   .style("stroke-width", "0.0px")
-  //   .call(force.drag)
-  //   .on("click", handleMouseClick);
 
   path = path.data(force.links());
   path.enter().append("path")
@@ -226,12 +146,26 @@ function restart() {
   force.start();
 }
 
-function txAdd(txToAdd){
+function addrAdd(addrToAdd){
+  const url = "http://81.25.55.217:6033/addr/?addr="+addrToAdd;
 
-  // Check if already added
-  if (force.nodes().some(function(elem) {
-        return elem.name === txToAdd
-      })) return;
+  // console.log(url)
+  const request = async () => {
+    const res = await fetch(url)
+    const data = await res.json();
+    i = 0;
+    for (var el of data){
+      // console.log(el.tx_dst)
+      txAdd(el.tx_dst)
+      if (i++ >= 50) break;
+      // i++;
+    } 
+  }
+
+  request();
+}
+
+function txAdd(txToAdd){
 
   const url = "http://81.25.55.217:6033/tx/?tx="+txToAdd;
 
@@ -239,103 +173,59 @@ function txAdd(txToAdd){
   const request = async () => {
     const res = await fetch(url)
     const data = await res.json();
-      // .then( res => res.json() )
-      // .then( data => {
-        // console.log(data) 
-    console.log(data)
-    txInd = force.nodes().push({name: data.txid, type: "tx"})
     
+    i = 0;
     for (var el of data.vout){ 
-      newNode = {name: String(el.value), type: "", tx_src: data.txid, n: el.n}
-      url2 = "http://81.25.55.217:6033/txo/?tx="+data.txid+"&n="+el.n;
-      const res2 = await fetch(url2)
-      const data2 = await res2.json();
-      console.log(data2)
-      if (data2.result == "not found"){
-        newNode["tx_dst"] = "";
-        newNode["type"] = "notfound";
-        // Check if this TXO is already added to chart
-        i2 = outExistsSrc(newNode["tx_src"], el.n)
-        if (i2 != -1)
-        {
-          newNode = null;
-          (force.nodes())[i2]["name"] = String(el.value);
-          // link existing node to tx being added
-          // console.log(i2)
-          links.push({source: txInd-1, target: i2, type: "suit"});
-        } 
-      } else if (data2.result == "utxo"){
-        newNode["tx_dst"] = "";
-        newNode["type"] = "utxo";
-      } else {
-        newNode["tx_dst"] = data2.data[0].tx_dst;
-        newNode["type"] = "found";
-        // Check if this TXO is already added to chart
-        i2 = outExistsSrc(newNode["tx_src"], el.n)
-        if (i2 != -1)
-        {
-          newNode = null;
-          (force.nodes())[i2]["name"] = String(el.value);
-          // link existing node to tx being added
-          // console.log(i2)
-          links.push({source: txInd-1, target: i2, type: "suit"});
-        } 
-        console.log(i2)
+      if (i++ > 165) break;
+      // i++;
+      // console.log(el) // .scriptPubKey.address
+      if (addrNodeExist(String(el.scriptPubKey.address)) == -1){
+        newNode = {name: String(el.scriptPubKey.address), type: "", tx_src: data.txid, n: el.n, weight: 1.0, x: 0.0, y: 0.0}
+        force.nodes().push(newNode);
       }
+    }
+    force.start();
     
-      // console.log(newNode)
-      if (newNode != null){
-        nInd = force.nodes().push(newNode); 
-        links.push({source: txInd-1, target: nInd - 1, type: "suit"});
-        // console.log(el.scriptPubKey.address)
-      }
-    }
 
-    for (var el of data.vin){ 
-      // Check if this TXO is already added to chart
-      i2 = outExistsSrc(el.txid, el.vout)
-      if (i2 != -1){
-        links.push({target: txInd-1, source: i2, type: "suit"});
-      } else {
-        newNode = {name: "", type: "found", tx_dst: data.txid, n: el.vout, tx_src: el.txid}
-        nInd = force.nodes().push(newNode); 
-        links.push({source: nInd - 1, target: txInd - 1, type: "suit"});
-        // console.log(el.txid)
+    i = 0, j = 0;
+    for (var el of data.vin){
+      // console.log(el)
+      if (i++ > 165) break;
+      // i++;
+      nInd = addrNodeExist(String(el.addr));
+      if (nInd == -1){
+        newNode = {name: String(el.addr), type: "", weight: 1.0, x: 0.0, y: 0.0}
+        nInd = force.nodes().push(newNode);
+        nInd = nInd - 1;
+      }
+      j = 0;
+      for (var el2 of data.vout){ 
+        if (j++ > 165) break;
+        // j++;
+        nInd2 = addrNodeExist(String(el2.scriptPubKey.address))
+        console.log(nInd, nInd2)
+        links.push({source: nInd, target: nInd2});
       }
     }
+    // force.start();
     restart();
   }
   request();
-  
-    // });
 }
 
-function outExistsDst(txid, n){
+function addrNodeExist(addr){
   var i;
   var list = force.nodes();
 
-  console.log(txid,n)
+  // console.log(addr)
   for (i = 0; i < list.length; i++) {
-    // console.log()
-    if (list[i].tx_dst == txid && list[i].n == n) {
-      // console.log("found:",list[i].index)
-      return list[i].index;
-    }
-  }
-  return -1;
-}
-
-function outExistsSrc(txid, n){
-  var i;
-  var list = force.nodes();
-
-  console.log(txid,n)
-  for (i = 0; i < list.length; i++) {
-    if (list[i].tx_src == txid && list[i].n == n) {
+    if (list[i].name == addr) {
+      // console.log("found", list[i], list[i].index)
       return list[i].index;
     }
   }
   
+  // console.log("not found")
   return -1;
 }
 </script>
